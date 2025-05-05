@@ -15,15 +15,10 @@
 local.properties
 # Android Studio
 .idea/
-*.iml
 
 # Build files
 /build/
 */build/
 
-# Local config
-local.properties
-
 # OS junk
-.DS_Store
 Thumbs.db
