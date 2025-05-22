@@ -209,41 +209,75 @@ fun SignUpMenu(auth: FirebaseAuth, onAuthSuccess: (FirebaseUser?) -> Unit) {
         Button(
             onClick = {
                 if (login.value) {
-                    // Login existing user
-                    auth.signInWithEmailAndPassword(email, pass)
-                        .addOnCompleteListener { task ->
-                            if (task.isSuccessful) {
-                                // Sign in success, update UI with the signed-in user's information
-                                Log.d("FirebaseAuth", "signInWithEmail:success")
-                                val user = auth.currentUser
-                                Toast.makeText(context, "Login successful!", Toast.LENGTH_SHORT).show()
-                                // TODO: Call updateUI(user) and navigate to main activity
-                            } else {
-                                // If sign in fails, display a message to the user.
-                                Log.w("FirebaseAuth", "signInWithEmail:failure", task.exception)
-                                Toast.makeText(context, "Authentication failed: ${task.exception?.message}", Toast.LENGTH_LONG).show()
-                            }
-                        }
-                } else {
-                    // Create new user
-                    if (pass == confirm) {
-                        auth.createUserWithEmailAndPassword(email, pass)
+                    // Login existing user - Add validation here
+                    if (email.isEmpty() || pass.isEmpty()) {
+                        Toast.makeText(
+                            context,
+                            "Email and Password cannot be empty.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    } else {
+                        auth.signInWithEmailAndPassword(email, pass)
                             .addOnCompleteListener { task ->
                                 if (task.isSuccessful) {
                                     // Sign in success, update UI with the signed-in user's information
-                                    Log.d("FirebaseAuth", "createUserWithEmail:success")
+                                    Log.d("FirebaseAuth", "signInWithEmail:success")
                                     val user = auth.currentUser
-                                    Toast.makeText(context, "Account created successfully!", Toast.LENGTH_SHORT).show()
-                                    // TODO: Call updateUI(user) and navigate to main activity
+                                    Toast.makeText(context, "Login successful!", Toast.LENGTH_SHORT)
+                                        .show()
+                                    onAuthSuccess(user)
                                 } else {
                                     // If sign in fails, display a message to the user.
-                                    Log.w("FirebaseAuth", "createUserWithEmail:failure", task.exception)
-                                    Toast.makeText(context, "Account creation failed: ${task.exception?.message}", Toast.LENGTH_LONG).show()
+                                    Log.w("FirebaseAuth", "signInWithEmail:failure", task.exception)
+                                    Toast.makeText(
+                                        context,
+                                        "Authentication failed: ${task.exception?.message}",
+                                        Toast.LENGTH_LONG
+                                    ).show()
                                 }
                             }
+                    }
+                } else {
+                    // Create new user - Add validation here
+                    if (email.isEmpty() || pass.isEmpty() || confirm.isEmpty()) {
+                        Toast.makeText(context, "All fields must be filled.", Toast.LENGTH_SHORT)
+                            .show()
                     } else {
-                        Log.e("FirebaseAuth", "Passwords do not match")
-                        Toast.makeText(context, "Passwords do not match!", Toast.LENGTH_SHORT).show()
+                        if (pass == confirm) {
+                            auth.createUserWithEmailAndPassword(email, pass)
+                                .addOnCompleteListener { task ->
+                                    if (task.isSuccessful) {
+                                        // Sign in success, update UI with the signed-in user's information
+                                        Log.d("FirebaseAuth", "createUserWithEmail:success")
+                                        val user = auth.currentUser
+                                        Toast.makeText(
+                                            context,
+                                            "Account created successfully!",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                        onAuthSuccess(user)
+                                    } else {
+                                        // If sign in fails, display a message to the user.
+                                        Log.w(
+                                            "FirebaseAuth",
+                                            "createUserWithEmail:failure",
+                                            task.exception
+                                        )
+                                        val errorMessage = when (task.exception) {
+                                            is com.google.firebase.auth.FirebaseAuthUserCollisionException -> "An account with this email already exists."
+                                            is com.google.firebase.auth.FirebaseAuthWeakPasswordException -> "Password must have at least 6 characters."
+                                            is com.google.firebase.auth.FirebaseAuthInvalidCredentialsException -> "Invalid email address format."
+                                            else -> "Account creation failed: ${task.exception?.message}"
+                                        }
+                                        Toast.makeText(context, errorMessage, Toast.LENGTH_LONG)
+                                            .show()
+                                    }
+                                }
+                        } else {
+                            Log.e("FirebaseAuth", "Passwords do not match")
+                            Toast.makeText(context, "Passwords do not match!", Toast.LENGTH_SHORT)
+                                .show()
+                        }
                     }
                 }
             },
